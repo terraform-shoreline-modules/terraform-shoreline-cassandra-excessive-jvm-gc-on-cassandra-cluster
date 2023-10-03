@@ -1,0 +1,142 @@
+{
+  "name": "excessive_jvm_gc_on_cassandra_cluster",
+  "description": "This incident type refers to a problem where the Java Virtual Machine (JVM) running on a Cassandra cluster is experiencing an excessive amount of garbage collection (GC) events. GC is a process where the JVM frees up memory by removing objects that are no longer in use. Excessive GC can lead to performance degradation and even system crashes.",
+  "params": [
+    {
+      "name": "NEW_HEAP_SIZE",
+      "value": ""
+    },
+    {
+      "name": "PID",
+      "value": ""
+    },
+    {
+      "name": "NEW_HEAP_SIZE_IN_GB",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CASSANDRA_LOG_FILE",
+      "value": ""
+    },
+    {
+      "name": "PATH_TO_CASSANDRA_INSTALLATION_DIRECTORY",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Excessive JVM GC on Cassandra Cluster\nThis incident type refers to a problem where the Java Virtual Machine (JVM) running on a Cassandra cluster is experiencing an excessive amount of garbage collection (GC) events. GC is a process where the JVM frees up memory by removing objects that are no longer in use. Excessive GC can lead to performance degradation and even system crashes."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Cassandra is running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo service cassandra status`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Cassandra's logs for GC events"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo tail -f /var/log/cassandra/system.log | grep GC`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the heap size and usage of the JVM"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo jstat -gcutil ${PID}`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the overall CPU and memory usage of the server"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `top`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the disk usage and I/O operations of the server"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `iostat`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the network traffic of the server"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `iftop`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Cassandra cluster may be running on hardware that does not meet the minimum requirements for the workload, resulting in insufficient memory resources and increased GC frequency."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_memory_check($PATH_TO_CASSANDRA_LOG_FILE)"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Adjust JVM heap size: Increasing the heap size of the JVM running on the Cassandra cluster can help reduce the frequency of GC events. This can be done by configuring the JVM parameters."
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_set_heap_size($NEW_HEAP_SIZE, $NEW_HEAP_SIZE_IN_GB, $PATH_TO_CASSANDRA_INSTALLATION_DIRECTORY)"
+    }
+  ]
+}
